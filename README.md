@@ -3,7 +3,8 @@ Seluruh data gempa bumi terbaru berasal dari BMKG.
 
 # COMMANDS
 <ol>
-    <li>/setgempa <channel> (untuk mengirimkan notifikasi terkait gempa terbaru.)</li>
+    <li>/setgempa [channel] (untuk mengirimkan notifikasi terkait gempa terbaru.)</li>
+    <li>/gempaterbaru (untuk menampilkan gempa terbaru.)</li>
     <li>/cuaca (soon)</li>
 </ol>
 

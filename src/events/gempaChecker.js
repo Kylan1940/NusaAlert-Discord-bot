@@ -23,7 +23,7 @@ module.exports = {
         const gempaId = `${gempa.Tanggal}-${gempa.Jam}-${gempa.Magnitude}`;
 
         // Cek apakah gempa ini sudah pernah dikirim sebelumnya
-        if (gempaId === lastGempaId) return;
+        // if (gempaId === lastGempaId) return;
         lastGempaId = gempaId;
 
         const configFolder = path.join(__dirname, '../../gempa-config');
@@ -48,7 +48,8 @@ module.exports = {
               { name: 'Lokasi', value: gempa.Wilayah },
               { name: 'Waktu', value: `${gempa.Tanggal} ${gempa.Jam}` },
               { name: 'Magnitudo', value: gempa.Magnitude, inline: true },
-              { name: 'Kedalaman', value: gempa.Kedalaman, inline: true }
+              { name: 'Kedalaman', value: gempa.Kedalaman, inline: true },
+              { name: 'Potensi', value: gempa.Potensi }
             )
             .setFooter({ text: 'Data dari BMKG' })
             .setTimestamp();
