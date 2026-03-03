@@ -23,7 +23,7 @@ module.exports = {
         const gempaId = `${gempa.Tanggal}-${gempa.Jam}-${gempa.Magnitude}`;
 
         // Cek apakah gempa ini sudah pernah dikirim sebelumnya
-        // if (gempaId === lastGempaId) return;
+        if (gempaId === lastGempaId) return;
         lastGempaId = gempaId;
 
         const configFolder = path.join(__dirname, '../../gempa-config');
