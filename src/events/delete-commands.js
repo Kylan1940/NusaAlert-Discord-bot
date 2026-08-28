@@ -1,18 +1,22 @@
-const { REST, Routes } = require("discord.js");
-require("dotenv").config();
+require('dotenv').config();
 
-const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
+const { REST, Routes } = require('discord.js');
 
-(async () => {
-  try {
-    console.log("Deleting all global commands...");
+const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 
-    await rest.put(Routes.applicationCommands(process.env.APPLICATION_ID), {
-      body: [],
-    });
+async function deleteCommands() {
+    try {
+        console.log('Deleting GLOBAL slash commands...');
 
-    console.log("Successfully deleted all global commands.");
-  } catch (error) {
-    console.error(error);
-  }
-})();
+        await rest.put(
+            Routes.applicationCommands(process.env.APPLICATION_ID),
+            { body: [] }
+        );
+
+        console.log('Global slash commands deleted.');
+    } catch (error) {
+        console.error('Failed to delete global commands:', error);
+    }
+}
+
+deleteCommands();
