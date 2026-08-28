@@ -1,4 +1,4 @@
-# BMKG Discord Bot
+# NusaAlert Discord Bot
 
 A Discord bot that provides earthquake information from **BMKG (Badan Meteorologi, Klimatologi, dan Geofisika)** directly to your Discord server.
 
@@ -40,8 +40,8 @@ Before installing the bot, make sure you have:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Kylan1940/BMKG-Discord-Bot.git
-cd BMKG-Discord-Bot
+git clone https://github.com/Kylan1940/NusaAlert-Discord-Bot.git
+cd NusaAlert-Discord-Bot
 ```
 
 ### 2. Install Dependencies
@@ -193,7 +193,7 @@ This keeps `src/index.js` from becoming unnecessarily large. Humanity has alread
 The project uses a modular structure to separate commands, events, and handlers.
 
 ```text
-BMKG-Discord-Bot/
+NusaAlert-Discord-Bot/
 │
 ├── src/
 │   ├── commands/

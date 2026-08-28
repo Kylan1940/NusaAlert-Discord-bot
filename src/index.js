@@ -16,7 +16,7 @@ client.once('clientReady', (c) => {
 
   client.user.setPresence({
     activities: [{
-      name: '/setgempa | kylan1940.netlify.app',
+      name: '/setgempa | kylan1940.web.id',
       type: ActivityType.Watching
     }],
     status: 'online'
