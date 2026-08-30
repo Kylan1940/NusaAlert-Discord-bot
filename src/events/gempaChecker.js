@@ -1,65 +1,99 @@
-const fs = require('fs');
-const path = require('path');
-const { EmbedBuilder } = require('discord.js');
+const fs = require("fs");
+const path = require("path");
+const { EmbedBuilder } = require("discord.js");
 
 let lastGempaId = null;
 
 module.exports = {
-  name: 'clientReady',
+  name: "clientReady",
   once: true,
 
   async execute(client) {
-    console.log('Gempa checker aktif.');
+    console.log("Gempa checker aktif.");
 
-    setInterval(async () => {
+    const checkGempa = async () => {
       try {
         const response = await fetch(
-          'https://data.bmkg.go.id/DataMKG/TEWS/autogempa.json'
+          "https://data.bmkg.go.id/DataMKG/TEWS/autogempa.json",
         );
 
+        if (!response.ok) {
+          throw new Error(`BMKG returned HTTP ${response.status}`);
+        }
+
         const data = await response.json();
-        const gempa = data.Infogempa.gempa;
+        const gempa = data?.Infogempa?.gempa;
+
+        if (!gempa) {
+          console.error("Data gempa tidak ditemukan.");
+          return;
+        }
 
         const gempaId = `${gempa.Tanggal}-${gempa.Jam}-${gempa.Magnitude}`;
 
-        // Cek apakah gempa ini sudah pernah dikirim sebelumnya
         if (gempaId === lastGempaId) return;
+
         lastGempaId = gempaId;
 
-        const configFolder = path.join(__dirname, '../../gempa-config');
+        const configFolder = path.join(__dirname, "../../gempa-config");
+
         if (!fs.existsSync(configFolder)) return;
 
         const files = fs.readdirSync(configFolder);
 
         for (const file of files) {
-          const config = JSON.parse(
-            fs.readFileSync(path.join(configFolder, file))
-          );
+          try {
+            const config = JSON.parse(
+              fs.readFileSync(path.join(configFolder, file), "utf8"),
+            );
 
-          const channel = await client.channels
-            .fetch(config.channelId)
-            .catch(() => null);
+            const channel = await client.channels
+              .fetch(config.channelId)
+              .catch(() => null);
 
-          if (!channel) continue;
+            if (!channel) continue;
 
-          const embed = new EmbedBuilder()
-            .setTitle('🚨 Gempa Terbaru')
-            .addFields(
-              { name: 'Lokasi', value: gempa.Wilayah },
-              { name: 'Waktu', value: `${gempa.Tanggal} ${gempa.Jam}` },
-              { name: 'Magnitudo', value: gempa.Magnitude, inline: true },
-              { name: 'Kedalaman', value: gempa.Kedalaman, inline: true },
-              { name: 'Potensi', value: gempa.Potensi }
-            )
-            .setFooter({ text: 'Data dari BMKG' })
-            .setTimestamp();
-
-          channel.send({ embeds: [embed] });
+            const embed = new EmbedBuilder()
+              .setTitle("🚨 Gempa Terbaru")
+              .addFields(
+                {
+                  name: "Lokasi",
+                  value: gempa.Wilayah,
+                },
+                {
+                  name: "Waktu",
+                  value: `${gempa.Tanggal} ${gempa.Jam}`,
+                },
+                {
+                  name: "Magnitudo",
+                  value: gempa.Magnitude,
+                  inline: true,
+                },
+                {
+                  name: "Kedalaman",
+                  value: gempa.Kedalaman,
+                  inline: true,
+                },
+                {
+                  name: "Potensi",
+                  value: gempa.Potensi,
+                },
+              )
+              .setFooter({ text: "Data dari BMKG" })
+              .setTimestamp();
+            await channel.send({
+              embeds: [embed],
+            });
+          } catch (error) {
+            console.error(`Failed to process config ${file}:`, error.message);
+          }
         }
-
-      } catch (err) {
-        console.error('Gempa checker error:', err);
+      } catch (error) {
+        console.error("Gempa checker error:", error.message);
       }
-    }, 60000);
+    };
+
+    await checkGempa();
+    setInterval(checkGempa, 60000);
   },
 };
