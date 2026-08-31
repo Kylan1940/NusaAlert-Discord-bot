@@ -4,36 +4,43 @@ A Discord bot that provides earthquake information from **BMKG (Badan Meteorolog
 
 ## Features
 
-- Latest earthquake information
-- Automatic earthquake notifications
-- Configurable earthquake notification channel
-- Discord slash commands
-- BMKG data integration
-- Modular command and event system
-- Environment variable configuration
+* Latest earthquake information from BMKG
+* Automatic earthquake notifications
+* Configurable earthquake notification channel
+* Earthquake history storage using SQLite
+* Earthquake history command
+* Duplicate earthquake detection
+* Discord slash commands
+* BMKG data integration
+* Modular command and event system
+* Persistent earthquake data storage
+* Environment variable configuration
+* Error handling for BMKG API requests
 
 ## Commands
 
-| Command | Description |
-| --- | --- |
-| `/gempaterbaru` | Displays the latest earthquake information |
-| `/setgempa [channel]` | Sets a channel for earthquake notifications |
-| `/cuaca` | Displays weather information *(Coming Soon)* |
+| Command               | Description                                           |
+| --------------------- | ----------------------------------------------------- |
+| `/gempaterbaru`       | Displays the latest earthquake information            |
+| `/historygempa`       | Displays previously recorded earthquake information   |
+| `/setgempa [channel]` | Sets a channel for automatic earthquake notifications |
+| `/cuaca`              | Displays weather information *(Coming Soon)*          |
 
 ## Requirements
 
 Before installing the bot, make sure you have:
 
-- [Node.js](https://nodejs.org/) installed
-- A Discord application
-- A Discord bot
-- A Discord server where you can manage bots
+* [Node.js](https://nodejs.org/) installed
+* A Discord application
+* A Discord bot
+* A Discord server where you can manage bots
 
 ### Dependencies
 
-- Node.js
-- Discord.js `14.25.1`
-- dotenv `17.3.1`
+* Node.js
+* Discord.js `14.25.1`
+* dotenv `17.3.1`
+* better-sqlite3
 
 ## Installation
 
@@ -62,6 +69,8 @@ TOKEN=YOUR_DISCORD_BOT_TOKEN
 
 Replace `YOUR_DISCORD_BOT_TOKEN` with your Discord bot token.
 
+> Never share or commit your Discord bot token.
+
 ### 4. Create a Discord Application
 
 Go to the [Discord Developer Portal](https://discord.com/developers/applications).
@@ -79,15 +88,15 @@ Open **OAuth2 → URL Generator** in the Discord Developer Portal.
 
 Under **Scopes**, select:
 
-- `bot`
-- `applications.commands`
+* `bot`
+* `applications.commands`
 
 Under **Bot Permissions**, give the bot the permissions required to:
 
-- View Channels
-- Send Messages
-- Embed Links
-- Read Message History
+* View Channels
+* Send Messages
+* Embed Links
+* Read Message History
 
 Generate the URL and invite the bot to your Discord server.
 
@@ -120,8 +129,15 @@ Command / Event Handler
       ▼
 Process & Format Data
       │
+      ├───────────────┐
+      ▼               ▼
+Discord Embed      SQLite
+      │               │
+      │               ▼
+      │         Earthquake History
+      │
       ▼
-Discord Embed / Notification
+Discord Notification
 ```
 
 ### 1. Discord Client
@@ -132,12 +148,12 @@ The Discord.js client is initialized and connected to Discord using the token st
 
 The main entry point is responsible for:
 
-- Loading environment variables
-- Creating the Discord client
-- Configuring intents
-- Loading event handlers
-- Setting the bot presence
-- Logging in to Discord
+* Loading environment variables
+* Creating the Discord client
+* Configuring intents
+* Loading event handlers
+* Setting the bot presence
+* Logging in to Discord
 
 ### 2. Command System
 
@@ -147,7 +163,9 @@ Current commands include:
 
 ```text
 src/commands/
+
 ├── gempaterbaru.js
+├── historygempa.js
 └── setgempa.js
 ```
 
@@ -161,6 +179,7 @@ The current event files include:
 
 ```text
 src/events/
+
 ├── ready.js
 ├── interactionCreate.js
 └── gempaChecker.js
@@ -178,11 +197,64 @@ Handles Discord interactions such as slash commands.
 
 #### `gempaChecker.js`
 
-Handles earthquake checking and earthquake notification functionality.
+Periodically checks BMKG earthquake information and handles automatic earthquake notifications.
 
-### 4. Event Handler
+The earthquake checker also stores newly detected earthquake data in the SQLite database.
 
-The event handler is located at `src/handlers/eventHandler.js`.
+### 4. Database System
+
+The database system is located inside `src/database/`.
+
+```text
+src/database/
+
+├── database.js
+└── gempaRepository.js
+```
+
+NusaAlert uses SQLite to store earthquake information.
+
+The database is automatically created at:
+
+```text
+data/nusaalert.db
+```
+
+The database is used to:
+
+* Store detected earthquakes
+* Prevent duplicate earthquake records
+* Provide data for `/historygempa`
+* Preserve earthquake history when the bot restarts
+
+The database file is excluded from Git using `.gitignore`.
+
+### Earthquake Data Flow
+
+```text
+BMKG
+  │
+  ▼
+gempaChecker.js
+  │
+  ▼
+gempaRepository.js
+  │
+  ▼
+SQLite Database
+  │
+  ├── /historygempa
+  │
+  └── Future history features
+```
+
+### 5. Event Handler
+
+The event handler is located at:
+
+```text
+src/handlers/eventHandler.js
+```
 
 It is responsible for loading and registering the bot's event files.
 
@@ -190,7 +262,7 @@ This keeps `src/index.js` from becoming unnecessarily large. Humanity has alread
 
 ## Implementation
 
-The project uses a modular structure to separate commands, events, and handlers.
+The project uses a modular structure to separate commands, events, database functionality, and handlers.
 
 ```text
 NusaAlert-Discord-Bot/
@@ -198,7 +270,12 @@ NusaAlert-Discord-Bot/
 ├── src/
 │   ├── commands/
 │   │   ├── gempaterbaru.js
+│   │   ├── historygempa.js
 │   │   └── setgempa.js
+│   │
+│   ├── database/
+│   │   ├── database.js
+│   │   └── gempaRepository.js
 │   │
 │   ├── events/
 │   │   ├── gempaChecker.js
@@ -210,6 +287,12 @@ NusaAlert-Discord-Bot/
 │   │
 │   └── index.js
 │
+├── data/
+│   └── nusaalert.db
+│
+├── gempa-config/
+│   └── ...
+│
 ├── .env
 ├── .gitignore
 ├── LICENSE
@@ -217,6 +300,8 @@ NusaAlert-Discord-Bot/
 ├── package-lock.json
 └── README.md
 ```
+
+> `data/nusaalert.db`, `.env`, and runtime configuration files should not be committed to Git.
 
 ### `src/index.js`
 
@@ -228,7 +313,21 @@ It is responsible for initializing the bot and starting the application.
 
 Contains the bot's slash commands.
 
-Each command has its own file. For example, `gempaterbaru.js` is responsible for the `/gempaterbaru` command.
+Each command has its own file.
+
+For example:
+
+* `gempaterbaru.js` handles `/gempaterbaru`
+* `historygempa.js` handles `/historygempa`
+* `setgempa.js` handles `/setgempa`
+
+### `src/database/`
+
+Contains the SQLite database and database repository.
+
+`database.js` initializes the SQLite database and creates the required tables.
+
+`gempaRepository.js` provides functions for storing and retrieving earthquake information.
 
 ### `src/events/`
 
@@ -242,31 +341,9 @@ Contains reusable handlers used by the application.
 
 Currently, the event handler is responsible for loading the bot's event files.
 
-## Adding a New Command
-
-To add a new command:
-
-1. Create a new JavaScript file inside `src/commands/`.
-2. Define the slash command using Discord.js.
-3. Add the command to the command registration system.
-4. Restart the bot.
-5. Test the command in Discord.
-
-Example:
-
-```text
-src/
-└── commands/
-    ├── gempaterbaru.js
-    ├── setgempa.js
-    └── newcommand.js
-```
-
-This structure makes it easier to add additional functionality in the future.
-
 ## Earthquake Notifications
 
-The bot can automatically send earthquake notifications to a configured Discord channel.
+NusaAlert can automatically send earthquake notifications to a configured Discord channel.
 
 Use:
 
@@ -276,7 +353,28 @@ Use:
 
 to configure the channel that will receive earthquake notifications.
 
-After the channel has been configured, the earthquake checker can monitor BMKG earthquake information and send notifications when new earthquake information is detected.
+After the channel has been configured, the earthquake checker monitors BMKG earthquake information and sends notifications when new earthquake information is detected.
+
+## Earthquake History
+
+NusaAlert stores detected earthquake information in a local SQLite database.
+
+The `/historygempa` command retrieves previously recorded earthquake information from the database.
+
+Example:
+
+```text
+/historygempa
+```
+
+The command displays recorded earthquake information, including details such as:
+
+* Magnitude
+* Location
+* Date and time
+* Depth
+
+Earthquake records are stored locally and are not uploaded to an external database.
 
 ## Data Source
 
@@ -286,7 +384,7 @@ The earthquake information used by the bot comes from:
 
 The bot retrieves and presents BMKG information through Discord.
 
-The bot does not generate or verify earthquake information independently.
+The bot does not generate or independently verify earthquake information.
 
 > **Disclaimer:** This bot is not an official BMKG application. Always refer to official BMKG information for emergency situations.
 
@@ -302,16 +400,24 @@ Make sure the `.env` file contains a valid Discord bot token.
 
 ## Roadmap
 
-- [x] Latest earthquake command
-- [x] Earthquake notification channel
-- [x] Discord slash commands
-- [x] Modular command system
-- [x] Modular event system
-- [ ] Weather command
-- [ ] Additional BMKG information
-- [ ] Improved notification configuration
-- [ ] Better error handling
-- [ ] Production deployment
+* [x] Latest earthquake command
+* [x] Earthquake notification channel
+* [x] Automatic earthquake notifications
+* [x] Discord slash commands
+* [x] Modular command system
+* [x] Modular event system
+* [x] BMKG earthquake data integration
+* [x] Earthquake history database
+* [x] `/historygempa` command
+* [x] Duplicate earthquake detection
+* [x] Production deployment
+* [ ] History pagination improvements
+* [ ] Earthquake detail command
+* [ ] Earthquake history filters
+* [ ] Improved notification configuration
+* [ ] Weather command
+* [ ] Additional BMKG information
+* [ ] Weather notifications
 
 ## License
 
@@ -320,10 +426,6 @@ This project is licensed under the **Apache License 2.0**.
 See the [LICENSE](LICENSE) file for more information.
 
 ## Author
-
 **Kylan1940**
-
-- GitHub: [Kylan1940](https://github.com/Kylan1940)
-- Website: [kylan1940.netlify.app](https://kylan1940.netlify.app)
-
----
+* GitHub: [Kylan1940](https://github.com/Kylan1940)
+* Website: [kylan1940.netlify.app](https://kylan1940.netlify.app)
