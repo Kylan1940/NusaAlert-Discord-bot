@@ -40,6 +40,9 @@ interface EarthquakeMapPanelProps {
   earthquakes: readonly Earthquake[];
   /** Current time (ms), used for the time ranges */
   now: number;
+  /** Active time range. Owned by the parent so other widgets can follow it. */
+  range: TimeRange;
+  onRangeChange: (range: TimeRange) => void;
   /** Id of the latest event, which gets an extra ring */
   latestId?: string | null;
 }
@@ -98,8 +101,13 @@ function ViewController({
  * It only needs its props, so it can be swapped for another map
  * implementation without touching the dashboard.
  */
-export function EarthquakeMapPanel({ earthquakes, now, latestId = null }: EarthquakeMapPanelProps) {
-  const [range, setRange] = useState<TimeRange>('7d');
+export function EarthquakeMapPanel({
+  earthquakes,
+  now,
+  range,
+  onRangeChange,
+  latestId = null,
+}: EarthquakeMapPanelProps) {
   const [showLabels, setShowLabels] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [fitSignal, setFitSignal] = useState(0);
@@ -131,7 +139,7 @@ export function EarthquakeMapPanel({ earthquakes, now, latestId = null }: Earthq
 
   function changeRange(next: TimeRange) {
     if (next === range) return;
-    setRange(next);
+    onRangeChange(next);
     setSelectedId(null);
     setFitSignal((n) => n + 1);
   }
@@ -146,11 +154,6 @@ export function EarthquakeMapPanel({ earthquakes, now, latestId = null }: Earthq
         <h2 id="map-title" className="card__title">
           Earthquake Map
         </h2>
-        {earthquakes.length > 0 ? (
-          <span className="card__meta" aria-live="polite">
-            {visible.length} {visible.length === 1 ? 'event' : 'events'}
-          </span>
-        ) : null}
       </header>
 
       <div className="map-toolbar">

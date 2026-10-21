@@ -245,12 +245,12 @@ export function applyHistoryFilters(
 /* Time ranges (map)                                                           */
 /* -------------------------------------------------------------------------- */
 
-export const TIME_RANGES: readonly { key: TimeRange; label: string }[] = [
-  { key: 'all', label: 'All time' },
-  { key: '7d', label: '7 days' },
-  { key: '3d', label: '3 days' },
-  { key: '1d', label: '1 day' },
-  { key: 'today', label: 'Today' },
+export const TIME_RANGES: readonly { key: TimeRange; label: string; eventsLabel: string }[] = [
+  { key: 'all', label: 'All time', eventsLabel: 'Events All Time' },
+  { key: '7d', label: '7 days', eventsLabel: 'Events in 7 Days' },
+  { key: '3d', label: '3 days', eventsLabel: 'Events in 3 Days' },
+  { key: '1d', label: '1 day', eventsLabel: 'Events in 1 Day' },
+  { key: 'today', label: 'Today', eventsLabel: 'Events Today' },
 ];
 
 const HOUR_MS = 3_600_000;

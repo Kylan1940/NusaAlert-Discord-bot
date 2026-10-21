@@ -9,12 +9,14 @@ import { LatestEarthquakeCard } from '../components/LatestEarthquakeCard';
 import { LoadingState } from '../components/LoadingState';
 import { Navbar } from '../components/Navbar';
 import { StatCard } from '../components/StatCard';
-import type { DataStatus, Earthquake, HistoryFilters } from '../types/earthquake';
+import type { DataStatus, Earthquake, HistoryFilters, TimeRange } from '../types/earthquake';
 import {
   DASH,
   DEFAULT_FILTERS,
+  TIME_RANGES,
   applyHistoryFilters,
   computeStats,
+  filterByTimeRange,
   formatMagnitude,
   formatRelativeTime,
   formatTimeOfDay,
@@ -29,7 +31,7 @@ interface DashboardProps {
 }
 
 export function Dashboard({ earthquakes, status = 'ready' }: DashboardProps) {
-  // Keeps "12 minutes ago" and "Events Today" correct while the page stays open.
+  // Keeps "12 minutes ago" and the time-range counts correct while the page stays open.
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 30_000);
@@ -37,10 +39,18 @@ export function Dashboard({ earthquakes, status = 'ready' }: DashboardProps) {
   }, []);
   const [filters, setFilters] = useState<HistoryFilters>(DEFAULT_FILTERS);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  // The map's time range also drives the "Events ..." statistic card.
+  const [mapRange, setMapRange] = useState<TimeRange>('7d');
 
   const isReady = status === 'ready';
 
   const stats = useMemo(() => computeStats(earthquakes, now), [earthquakes, now]);
+  const eventsInRange = useMemo(
+    () => filterByTimeRange(earthquakes, mapRange, now).length,
+    [earthquakes, mapRange, now],
+  );
+  const eventsLabel =
+    TIME_RANGES.find((item) => item.key === mapRange)?.eventsLabel ?? 'Events';
   const filtered = useMemo(
     () => applyHistoryFilters(earthquakes, filters),
     [earthquakes, filters],
@@ -81,8 +91,8 @@ export function Dashboard({ earthquakes, status = 'ready' }: DashboardProps) {
               />
               <StatCard
                 icon={<CalendarDays size={18} />}
-                label="Events Today"
-                value={hasData ? String(stats.today) : DASH}
+                label={eventsLabel}
+                value={hasData ? String(eventsInRange) : DASH}
               />
               <StatCard
                 icon={<Gauge size={18} />}
@@ -102,6 +112,8 @@ export function Dashboard({ earthquakes, status = 'ready' }: DashboardProps) {
               <EarthquakeMapPanel
                 earthquakes={isReady ? earthquakes : []}
                 now={now}
+                range={mapRange}
+                onRangeChange={setMapRange}
                 latestId={latest?.id ?? null}
               />
             </div>
