@@ -27,6 +27,9 @@ export type MagnitudeLevelKey = 'minor' | 'light' | 'moderate' | 'strong';
 
 export type MagnitudeRange = 'all' | MagnitudeLevelKey;
 
+/** Time window used by the map. `today` is the current calendar day in WIB. */
+export type TimeRange = 'all' | '7d' | '3d' | '1d' | 'today';
+
 export type SortOption =
   | 'time-desc'
   | 'time-asc'

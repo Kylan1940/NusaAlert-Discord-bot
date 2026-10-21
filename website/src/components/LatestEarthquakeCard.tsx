@@ -101,8 +101,6 @@ function LatestBody({ earthquake, now }: { earthquake: Earthquake; now: number }
           <dd>{formatCoordinates(earthquake.latitude, earthquake.longitude)}</dd>
         </div>
       </dl>
-
-      <p className="card__note">Demonstration record. Not a live report.</p>
     </div>
   );
 }

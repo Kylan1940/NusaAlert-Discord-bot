@@ -1,5 +1,5 @@
 import { CalendarDays, Clock, Database, Gauge } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { EarthquakeFilters } from '../components/EarthquakeFilters';
 import { EarthquakeHistoryTable } from '../components/EarthquakeHistoryTable';
 import { EarthquakeMapPanel } from '../components/EarthquakeMapPanel';
@@ -29,7 +29,12 @@ interface DashboardProps {
 }
 
 export function Dashboard({ earthquakes, status = 'ready' }: DashboardProps) {
-  const [now] = useState(() => Date.now());
+  // Keeps "12 minutes ago" and "Events Today" correct while the page stays open.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
   const [filters, setFilters] = useState<HistoryFilters>(DEFAULT_FILTERS);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
@@ -96,6 +101,7 @@ export function Dashboard({ earthquakes, status = 'ready' }: DashboardProps) {
             <div className="area-map">
               <EarthquakeMapPanel
                 earthquakes={isReady ? earthquakes : []}
+                now={now}
                 latestId={latest?.id ?? null}
               />
             </div>
@@ -108,7 +114,9 @@ export function Dashboard({ earthquakes, status = 'ready' }: DashboardProps) {
               Earthquake History
             </h2>
             {hasData ? (
-              <span className="card__meta">{earthquakes.length} demonstration records</span>
+              <span className="card__meta">
+                {earthquakes.length} {earthquakes.length === 1 ? 'record' : 'records'}
+              </span>
             ) : null}
           </header>
 

@@ -3,6 +3,7 @@ import type {
   HistoryFilters,
   MagnitudeLevelKey,
   SortOption,
+  TimeRange,
 } from '../types/earthquake';
 
 /** Shown wherever a value is not available. */
@@ -238,4 +239,42 @@ export function applyHistoryFilters(
   });
 
   return sortEarthquakes(matches, filters.sort);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Time ranges (map)                                                           */
+/* -------------------------------------------------------------------------- */
+
+export const TIME_RANGES: readonly { key: TimeRange; label: string }[] = [
+  { key: 'all', label: 'All time' },
+  { key: '7d', label: '7 days' },
+  { key: '3d', label: '3 days' },
+  { key: '1d', label: '1 day' },
+  { key: 'today', label: 'Today' },
+];
+
+const HOUR_MS = 3_600_000;
+const RANGE_MS = { '7d': 168 * HOUR_MS, '3d': 72 * HOUR_MS, '1d': 24 * HOUR_MS } as const;
+
+/**
+ * "7 days", "3 days" and "1 day" are rolling windows (the last 168, 72 and 24
+ * hours). "Today" is the current calendar day in WIB.
+ */
+export function filterByTimeRange(
+  earthquakes: readonly Earthquake[],
+  range: TimeRange,
+  now: number,
+): Earthquake[] {
+  if (range === 'all') return [...earthquakes];
+
+  if (range === 'today') {
+    const today = toDayKey(now);
+    return earthquakes.filter((eq) => today !== null && toDayKey(eq.timestamp) === today);
+  }
+
+  const since = now - RANGE_MS[range];
+  return earthquakes.filter((eq) => {
+    const time = new Date(eq.timestamp).getTime();
+    return !Number.isNaN(time) && time >= since;
+  });
 }

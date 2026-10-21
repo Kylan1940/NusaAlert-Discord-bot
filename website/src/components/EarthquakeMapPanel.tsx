@@ -5,11 +5,13 @@ import {
   Map as GoogleMap,
   useMap,
 } from '@vis.gl/react-google-maps';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
-import type { Earthquake } from '../types/earthquake';
+import type { Earthquake, TimeRange } from '../types/earthquake';
 import {
   MAGNITUDE_LEVELS,
+  TIME_RANGES,
+  filterByTimeRange,
   formatCoordinates,
   formatDateTime,
   formatDepth,
@@ -36,6 +38,8 @@ declare global {
 
 interface EarthquakeMapPanelProps {
   earthquakes: readonly Earthquake[];
+  /** Current time (ms), used for the time ranges */
+  now: number;
   /** Id of the latest event, which gets an extra ring */
   latestId?: string | null;
 }
@@ -51,7 +55,10 @@ function markerSize(magnitude: number): number {
   return Math.round(14 + Math.max(0, magnitude - 2.5) * 6);
 }
 
-/** Re-frames the map on request. Lives inside <GoogleMap> to reach the map. */
+/**
+ * Re-frames the map whenever `fitSignal` changes. It reads the points through
+ * a ref, so a data refresh never moves the map while the user is exploring.
+ */
 function ViewController({
   points,
   fitSignal,
@@ -60,18 +67,27 @@ function ViewController({
   fitSignal: number;
 }) {
   const map = useMap();
+  const latestPoints = useRef(points);
+
+  // Declared before the fit effect so it always runs first in the same commit.
+  useEffect(() => {
+    latestPoints.current = points;
+  });
 
   useEffect(() => {
     if (!map || fitSignal === 0) return;
-    if (points.length === 0) {
+    const current = latestPoints.current;
+    if (current.length === 0) {
       map.setCenter(INDONESIA_CENTER);
       map.setZoom(DEFAULT_ZOOM);
       return;
     }
     const bounds = new google.maps.LatLngBounds();
-    points.forEach((point) => bounds.extend(point));
-    map.fitBounds(bounds, 48);
-  }, [map, points, fitSignal]);
+    current.forEach((point) => bounds.extend(point));
+    map.fitBounds(bounds, 56);
+    // A single marker would zoom in as far as possible; keep some context.
+    if (current.length === 1) map.setZoom(7);
+  }, [map, fitSignal]);
 
   return null;
 }
@@ -79,10 +95,11 @@ function ViewController({
 /**
  * Earthquake map backed by the Google Maps JavaScript API.
  *
- * It only needs `earthquakes` (and optionally `latestId`) as props, so it can
- * be swapped for another map implementation without touching the dashboard.
+ * It only needs its props, so it can be swapped for another map
+ * implementation without touching the dashboard.
  */
-export function EarthquakeMapPanel({ earthquakes, latestId = null }: EarthquakeMapPanelProps) {
+export function EarthquakeMapPanel({ earthquakes, now, latestId = null }: EarthquakeMapPanelProps) {
+  const [range, setRange] = useState<TimeRange>('all');
   const [showLabels, setShowLabels] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [fitSignal, setFitSignal] = useState(0);
@@ -96,16 +113,28 @@ export function EarthquakeMapPanel({ earthquakes, latestId = null }: EarthquakeM
     };
   }, []);
 
-  const plotted = useMemo(() => earthquakes.filter(hasCoordinates), [earthquakes]);
+  const visible = useMemo(
+    () => filterByTimeRange(earthquakes, range, now),
+    [earthquakes, range, now],
+  );
+  const plotted = useMemo(() => visible.filter(hasCoordinates), [visible]);
   const points = useMemo(
     () => plotted.map((eq) => ({ lat: eq.latitude, lng: eq.longitude })),
     [plotted],
   );
-  const unplotted = earthquakes.length - plotted.length;
-  const selected = earthquakes.find((eq) => eq.id === selectedId) ?? null;
+  const unplotted = visible.length - plotted.length;
+  const selected = visible.find((eq) => eq.id === selectedId) ?? null;
 
   const hasKey = API_KEY !== '';
   const mapAvailable = hasKey && !loadFailed;
+  const rangeIsEmpty = earthquakes.length > 0 && visible.length === 0;
+
+  function changeRange(next: TimeRange) {
+    if (next === range) return;
+    setRange(next);
+    setSelectedId(null);
+    setFitSignal((n) => n + 1);
+  }
 
   function toggleSelected(id: string) {
     setSelectedId((current) => (current === id ? null : id));
@@ -117,6 +146,28 @@ export function EarthquakeMapPanel({ earthquakes, latestId = null }: EarthquakeM
         <h2 id="map-title" className="card__title">
           Earthquake Map
         </h2>
+        {earthquakes.length > 0 ? (
+          <span className="card__meta" aria-live="polite">
+            {visible.length} {visible.length === 1 ? 'event' : 'events'}
+          </span>
+        ) : null}
+      </header>
+
+      <div className="map-toolbar">
+        <div className="map-range" role="group" aria-label="Time range">
+          {TIME_RANGES.map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              className="toggle"
+              aria-pressed={range === key}
+              disabled={!mapAvailable}
+              onClick={() => changeRange(key)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         <div className="map-controls" role="group" aria-label="Map options">
           <button
             type="button"
@@ -136,7 +187,7 @@ export function EarthquakeMapPanel({ earthquakes, latestId = null }: EarthquakeM
             Fit all
           </button>
         </div>
-      </header>
+      </div>
 
       <div className="map-canvas">
         {!hasKey ? (
@@ -186,6 +237,11 @@ export function EarthquakeMapPanel({ earthquakes, latestId = null }: EarthquakeM
                 <ViewController points={points} fitSignal={fitSignal} />
               </GoogleMap>
             </div>
+            {rangeIsEmpty ? (
+              <p className="map-canvas__empty" role="status">
+                No earthquakes in this period.
+              </p>
+            ) : null}
           </APIProvider>
         )}
       </div>
