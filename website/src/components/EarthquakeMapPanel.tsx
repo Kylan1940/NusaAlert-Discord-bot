@@ -99,7 +99,7 @@ function ViewController({
  * implementation without touching the dashboard.
  */
 export function EarthquakeMapPanel({ earthquakes, now, latestId = null }: EarthquakeMapPanelProps) {
-  const [range, setRange] = useState<TimeRange>('all');
+  const [range, setRange] = useState<TimeRange>('7d');
   const [showLabels, setShowLabels] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [fitSignal, setFitSignal] = useState(0);

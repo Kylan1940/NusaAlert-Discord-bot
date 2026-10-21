@@ -5,9 +5,11 @@ import type { Earthquake } from '../types/earthquake';
  * It reads them from the NusaAlert bot's API (`GET /api/earthquakes`).
  */
 
-const API_URL = (import.meta.env.VITE_API_URL ?? '').trim().replace(/\/+$/, '');
+// Always use the same-origin endpoint. Vercel proxies it server-side in production,
+// while Vite proxies it during local development. This avoids browser Mixed Content.
+const API_ENDPOINT = '/api/earthquakes';
 
-export const isSourceConfigured = API_URL !== '';
+export const isSourceConfigured = true;
 
 function numberOrNull(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
@@ -42,7 +44,7 @@ function parseRecord(value: unknown): Earthquake | null {
 }
 
 export async function fetchEarthquakes(signal?: AbortSignal): Promise<Earthquake[]> {
-  const response = await fetch(`${API_URL}/api/earthquakes`, {
+  const response = await fetch(API_ENDPOINT, {
     signal,
     headers: { Accept: 'application/json' },
   });
