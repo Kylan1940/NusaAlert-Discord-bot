@@ -26,7 +26,7 @@ export function Navbar() {
             aria-label="Invite the NusaAlert bot to your Discord server"
           >
             <Bot size={16} strokeWidth={2.5} aria-hidden="true" />
-            <span>Invite Discord Bot</span>
+            <span>Discord Bot</span>
           </a>
 
           <a
