@@ -11,6 +11,7 @@ assignees: Kylan1940
 Check one. Then fill in only the matching section below and delete the other one.
 
 - [ ] Discord bot
+- [ ] Telegram bot
 - [ ] Website (earthquake history dashboard)
 
 ## Description
@@ -38,6 +39,18 @@ What happened instead.
 _Fill in only if the problem is with the bot. Delete this section otherwise._
 
 - **Command or feature:** <!-- e.g. /gempaterbaru, /historygempa, /setgempa, or the automatic earthquake alert -->
+- **What the bot replied or did:** <!-- paste the bot's message or error text -->
+- **Does the bot have these permissions in the channel?** <!-- View Channel, Send Messages, Embed Links -->
+- **Did it work before?** <!-- yes / no / not sure, and roughly when it stopped -->
+- **Time it happened (with time zone):** <!-- e.g. 21 Oct 2026, 14:50 WIB -->
+
+> Do not post your bot token or other secrets. Server and channel IDs are not needed unless asked.
+
+## Telegram bot
+
+_Fill in only if the problem is with the bot. Delete this section otherwise._
+
+- **Command or feature:** <!-- e.g. /gempaterbaru, /historygempa, or the automatic earthquake alert -->
 - **What the bot replied or did:** <!-- paste the bot's message or error text -->
 - **Does the bot have these permissions in the channel?** <!-- View Channel, Send Messages, Embed Links -->
 - **Did it work before?** <!-- yes / no / not sure, and roughly when it stopped -->

@@ -1,0 +1,16 @@
+{
+  "name": "nusaalert-telegram-bot",
+  "version": "1.0.0",
+  "description": "NusaAlert Telegram bot - riwayat gempa dari API NusaAlert Discord bot",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "grammy": "^1.30.0"
+  }
+}
